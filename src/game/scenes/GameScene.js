@@ -246,7 +246,7 @@ export class GameScene extends Phaser.Scene {
 
         if (this._dashPressed) {
             this._dashPressed = false
-            this.wasd.dash.__justDown = true
+            this.wasd.dash._justDown = true
         }
 
         this.player.update(this.sys.game.loop.delta, this.cursors, this.wasd, this.wasd.dash)
