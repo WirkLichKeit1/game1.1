@@ -1,8 +1,6 @@
 import { Player } from '../entities/Player.js'
 import { Enemy }  from '../entities/Enemy.js'
 
-// Mapa definido em código (matriz de tiles)
-// 0 = ar, 1 = terra, 2 = pedra, 3 = grama flutuante, 4 = tijolo
 const MAP = [
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -36,7 +34,7 @@ const COIN_POSITIONS = [
 
 const ENEMY_POSITIONS = [
     { col: 7,  row: 10, left: 6*32,  right: 10*32 },
-    { col: 15, row: 13, left: 14*32, right: 17*32 },
+    { col: 15, row: 10, left: 14*32, right: 19*32 },
     { col: 24, row: 10, left: 23*32, right: 28*32 },
 ]
 
@@ -49,28 +47,21 @@ export class GameScene extends Phaser.Scene {
         const mapW = MAP[0].length * TILE_SIZE
         const mapH = MAP.length    * TILE_SIZE
 
-        // Limites do mundo
         this.physics.world.setBounds(0, 0, mapW, mapH + 200)
 
-        // ── Parallax ──────────────────────────────────────────────────────────────
         this._buildParallax(mapW, mapH)
 
-        // ── Tilemap em código ─────────────────────────────────────────────────────
         this.platforms = this.physics.add.staticGroup()
         this._buildMap()
 
-        // ── Coins ─────────────────────────────────────────────────────────────────
         this.coins = this.physics.add.staticGroup()
         this._buildCoins()
 
-        // ── Inimigos ──────────────────────────────────────────────────────────────
         this.enemies = this.physics.add.group()
         this._buildEnemies()
 
-        // ── Player ────────────────────────────────────────────────────────────────
         this.player = new Player(this, 80, 300)
 
-        // Partículas de poeira
         this.dustEmitter = this.add.particles(0, 0, 'particle', {
             speed: { min: 20, max: 80 },
             angle: { min: 200, max: 340 },
@@ -91,49 +82,49 @@ export class GameScene extends Phaser.Scene {
             right: Phaser.Input.Keyboard.KeyCodes.D,
         })
 
-        // ── Colisões ──────────────────────────────────────────────────────────────
+        // ── D-Pad touch ───────────────────────────────────────────────────────────
+        this._jumpPressed = false
+
+        window._dpad = {
+            press: (key) => {
+                if (key === 'left')  this.wasd.left.isDown  = true
+                if (key === 'right') this.wasd.right.isDown = true
+                if (key === 'jump')  this._jumpPressed = true
+            },
+            release: (key) => {
+                if (key === 'left')  this.wasd.left.isDown  = false
+                if (key === 'right') this.wasd.right.isDown = false
+                if (key === 'jump')  this._jumpPressed = false
+            },
+        }
+
         this.physics.add.collider(this.player, this.platforms)
         this.physics.add.collider(this.enemies, this.platforms)
-
-        // Coletar coin
         this.physics.add.overlap(this.player, this.coins, this._collectCoin, null, this)
-
-        // Player vs Inimigo
         this.physics.add.overlap(this.player, this.enemies, this._hitEnemy, null, this)
 
-        // ── Câmera ────────────────────────────────────────────────────────────────
         this.cameras.main.setBounds(0, 0, mapW, mapH)
         this.cameras.main.startFollow(this.player, true, 0.1, 0.1)
         this.cameras.main.setDeadzone(80, 60)
-
-        // ── Estado do jogo ────────────────────────────────────────────────────────
-        this.score    = 0
-        this.coinTotal = COIN_POSITIONS.length
-        this.isDead   = false
-
-        // Comunica score/hp para o React via events
-        this.events.on('player-died', this._onPlayerDied, this)
-
-        // Emite estado inicial para o HUD
-        this._emitHUD()
-
-        // Faz a câmera ter leve lerp para ficar cinematográfica
         this.cameras.main.setLerp(0.1, 0.1)
 
-        // Zona de morte (cair fora do mapa)
+        this.score     = 0
+        this.coinTotal = COIN_POSITIONS.length
+        this.isDead    = false
+
+        this.events.on('player-died', this._onPlayerDied, this)
+        this._emitHUD()
+
         this._deathY = mapH + 100
     }
 
-    _buildParallax(mapW, mapH) {
-        // Camadas com velocidades diferentes — quanto menor o scroll factor, mais longe
+    _buildParallax(mapW) {
         const layers = [
             { key: 'bg-sky',       scrollX: 0,    scrollY: 0    },
             { key: 'bg-mountains', scrollX: 0.15, scrollY: 0.05 },
             { key: 'bg-trees',     scrollX: 0.35, scrollY: 0.1  },
         ]
-
         for (const { key, scrollX, scrollY } of layers) {
-            // Repete a imagem para cobrir o mapa inteiro
             const img = this.add.tileSprite(0, 0, mapW, 560, key)
             img.setOrigin(0, 0)
             img.setScrollFactor(scrollX, scrollY)
@@ -149,25 +140,14 @@ export class GameScene extends Phaser.Scene {
 
                 const x = col * TILE_SIZE + TILE_SIZE / 2
                 const y = row * TILE_SIZE + TILE_SIZE / 2
-
-                // Frame do tileset: tile 1→frame0(terra), 2→frame1(pedra), 3→frame3(grama), 4→frame2(tijolo)
                 const frameMap = { 1: 0, 2: 1, 3: 3, 4: 2 }
                 const frame = frameMap[tile] ?? 0
 
-                const img = this.add.image(x, y, 'tiles', frame)
-                img.setDepth(0)
-
+                this.add.image(x, y, 'tiles', frame).setDepth(0)
                 const body = this.physics.add.staticImage(x, y, 'tiles', frame)
                 body.setDepth(0)
                 body.refreshBody()
-
-                // Adiciona ao grupo
                 this.platforms.add(body)
-
-                // Pequena decoração nas bordas das plataformas (grama tipo 1)
-                if (tile === 1 || tile === 3) {
-                    // nada extra por ora
-                }
             }
         }
     }
@@ -176,12 +156,9 @@ export class GameScene extends Phaser.Scene {
         for (const { col, row } of COIN_POSITIONS) {
             const x = col * TILE_SIZE + TILE_SIZE / 2
             const y = row * TILE_SIZE + TILE_SIZE / 2
-
             const coin = this.physics.add.staticImage(x, y, 'coin', 0)
             coin.setDepth(5)
             this.coins.add(coin)
-
-            // Animação de bobbing
             this.tweens.add({
                 targets: coin,
                 y: y - 6,
@@ -197,54 +174,33 @@ export class GameScene extends Phaser.Scene {
     _buildEnemies() {
         for (const { col, row, left, right } of ENEMY_POSITIONS) {
             const x = col * TILE_SIZE + TILE_SIZE / 2
-            const y = (row - 0) * TILE_SIZE   // spawn acima do chão
-
-            const enemy = new Enemy(this, x, y, {
-                patrolLeft:  left,
-                patrolRight: right,
-                speed: 90,
-            })
+            const y = row * TILE_SIZE
+            const enemy = new Enemy(this, x, y, { patrolLeft: left, patrolRight: right, speed: 90 })
             this.enemies.add(enemy)
         }
     }
 
     _collectCoin(player, coin) {
-        // Efeito visual
         const x = coin.x, y = coin.y
         coin.destroy()
-
         this.add.particles(x, y, 'particle', {
             speed: { min: 60, max: 160 },
             scale: { start: 0.8, end: 0 },
             alpha: { start: 1, end: 0 },
             tint: [0xf5c518, 0xffd700, 0xffeaa0],
             lifespan: 500,
-            quantity: 8,
             emitting: false,
         }).explode(8)
-
-        // Score
         this.score += 10
         this._emitHUD()
-
-        // Tweenzinho de escala no player
-        this.tweens.add({
-            targets: this.player,
-            scaleX: 1.2,
-            scaleY: 0.85,
-            duration: 80,
-            yoyo: true,
-        })
+        this.tweens.add({ targets: this.player, scaleX: 1.2, scaleY: 0.85, duration: 80, yoyo: true })
     }
 
     _hitEnemy(player, enemy) {
         if (!enemy.isAlive || !player.isAlive) return
-
-        const pVy = player.body.velocity.y
+        const pVy  = player.body.velocity.y
         const pBot = player.body.bottom
         const eTop = enemy.body.top
-
-        // Stomped de cima
         if (pVy > 0 && pBot < eTop + 20) {
             enemy.stomp()
             player.setVelocityY(-400)
@@ -252,7 +208,6 @@ export class GameScene extends Phaser.Scene {
             this._emitHUD()
             this.cameras.main.shake(80, 0.006)
         } else {
-            // Levou dano
             player.die()
         }
     }
@@ -260,10 +215,8 @@ export class GameScene extends Phaser.Scene {
     _onPlayerDied() {
         if (this.isDead) return
         this.isDead = true
-
         this.cameras.main.shake(300, 0.015)
         this.cameras.main.fade(800, 0, 0, 0)
-
         this.time.delayedCall(900, () => {
             this.events.emit('game-over', this.score)
             this.scene.restart()
@@ -271,7 +224,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     _emitHUD() {
-        // Emite para o React via registry compartilhado
         this.registry.set('score', this.score)
         this.registry.set('coins', `${this.coinTotal - this.coins.getLength()}/${this.coinTotal}`)
     }
@@ -279,19 +231,20 @@ export class GameScene extends Phaser.Scene {
     update() {
         if (!this.player.isAlive) return
 
-        this.player.update(this.cursors, this.wasd)
+        // Injeta pulo do D-Pad touch no cursor antes do player processar
+        if (this._jumpPressed) {
+            this._jumpPressed = false
+            this.cursors.up.isDown = true
+            this.cursors.up._justDown = true
+        } else {
+            this.cursors.up.isDown = false
+        }
 
-        // Atualiza inimigos
+        this.player.update(this.cursors, this.wasd)
         this.enemies.getChildren().forEach(e => e.update())
 
-        // Morte por queda
         if (this.player.y > this._deathY) {
             this.player.die()
         }
-
-        // Scroll do parallax (movimento das camadas de fundo)
-        // O tileSprite com scrollFactor já cuida disso automaticamente!
     }
-
-    
 }

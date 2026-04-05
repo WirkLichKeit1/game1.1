@@ -217,18 +217,5 @@ export class BootScene extends Phaser.Scene {
 
     create() {
         this.scene.start('GameScene')
-
-        window._dpad = {
-            press:   (key) => {
-                if (key === 'left')  this.wasd.left.isDown  = true
-                if (key === 'right') this.wasd.right.isDown = true
-                if (key === 'jump')  { this.wasd.up.isDown = true; /* força JustDown */ }
-            },
-            release: (key) => {
-                if (key === 'left')  this.wasd.left.isDown  = false
-                if (key === 'right') this.wasd.right.isDown = false
-                if (key === 'jump')  this.wasd.up.isDown    = false
-            },
-        }
     }
 }
