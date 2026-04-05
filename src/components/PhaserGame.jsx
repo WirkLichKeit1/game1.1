@@ -18,7 +18,7 @@ export function PhaserGame({ onScoreChange, onCoinsChange }) {
       physics: {
         default: 'arcade',
         arcade: {
-          gravity: { y: 900 },
+          gravity: { y: 1800 },
           debug: false,           // mude para true para ver hitboxes
         },
       },

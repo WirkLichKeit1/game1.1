@@ -80,21 +80,25 @@ export class GameScene extends Phaser.Scene {
             up:    Phaser.Input.Keyboard.KeyCodes.W,
             left:  Phaser.Input.Keyboard.KeyCodes.A,
             right: Phaser.Input.Keyboard.KeyCodes.D,
+            dash: Phaser.Input.Keyboard.KeyCodes.SHIFT,
         })
 
         // ── D-Pad touch ───────────────────────────────────────────────────────────
         this._jumpPressed = false
+        this._dashPressed = false
 
         window._dpad = {
             press: (key) => {
                 if (key === 'left')  this.wasd.left.isDown  = true
                 if (key === 'right') this.wasd.right.isDown = true
                 if (key === 'jump')  this._jumpPressed = true
+                if (key === 'dash') this._dashPressed = true
             },
             release: (key) => {
                 if (key === 'left')  this.wasd.left.isDown  = false
                 if (key === 'right') this.wasd.right.isDown = false
                 if (key === 'jump')  this._jumpPressed = false
+                if (key === 'dash') this._dashPressed = false
             },
         }
 
@@ -240,7 +244,12 @@ export class GameScene extends Phaser.Scene {
             this.cursors.up.isDown = false
         }
 
-        this.player.update(this.cursors, this.wasd)
+        if (this._dashPressed) {
+            this._dashPressed = false
+            this.wasd.dash.__justDown = true
+        }
+
+        this.player.update(this.sys.game.loop.delta, this.cursors, this.wasd, this.wasd.dash)
         this.enemies.getChildren().forEach(e => e.update())
 
         if (this.player.y > this._deathY) {
