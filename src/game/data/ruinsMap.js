@@ -8,42 +8,44 @@
 
 export const TILE_SIZE = 32
 
-// 50 colunas x 36 linhas = 1600 x 1152px
+// 50 colunas x 29 linhas = 1600 x 928px
 export const MAP = [
-    // row 0-2: topo — sala secreta
+    // row 0-2: topo vazio
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     // row 3: plataforma secreta no topo
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // row 5: plataformas altas — exige wall jump ou double jump para chegar
+    // row 5: plataformas altas
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     // row 7: plataformas médias
     [0,0,0,0,0,0,0,0,0,0,3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // row 9: torre central — paredes verticais para wall jump
+    // row 9-13: torre central
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,3,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // row 14: chão da torre — plataforma de entrada
+    // row 14: chão da torre
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,3,3,3,3,3,3,3,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // row 15-16: área principal — nível do chão principal
+    // row 15: plataformas flutuantes — 2 tiles acima do chão, dando espaço livre embaixo
     [0,0,0,3,3,0,0,0,0,0,0,0,0,3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0],
+    // row 16: ar livre
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     // row 17: chão principal
     [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
     [2,2,2,2,2,2,2,2,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,2,2,2,2,2,2,2,2,2,2],
     [2,2,2,2,2,2,2,2,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,2,2,2,2,2,2,2,2,2,2],
-    // row 20-21: subsolo — acesso pelos gaps do chão
+    // row 20-21: paredes subsolo
     [2,2,2,2,2,2,2,2,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,2,2,2,2,2,2,2,2,2,2],
     [2,2,2,2,2,2,2,2,0,0,0,0,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,0,0,0,0,2,2,2,2,2,2,2,2,2,2],
-    // row 22: câmara do subsolo
+    // row 22-23: câmara do subsolo
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    // row 24: plataformas do subsolo
     [0,0,3,3,3,0,0,0,0,0,0,0,0,0,0,3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,0,0,0,0,0,0,0,0,3,3,3,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     // row 26: chão do subsolo
@@ -55,39 +57,39 @@ export const MAP = [
 export const PLAYER_START = { x: 3 * TILE_SIZE, y: 15 * TILE_SIZE }
 
 export const CHECKPOINTS = [
-    { x: 24 * TILE_SIZE, y: 16 * TILE_SIZE }, // centro — perto da torre
-    { x: 44 * TILE_SIZE, y: 16 * TILE_SIZE }, // direita — antes da saída
-    { x:  5 * TILE_SIZE, y: 25 * TILE_SIZE }, // subsolo esquerdo
+    { x: 24 * TILE_SIZE, y: 17 * TILE_SIZE }, // centro, sobre o chão principal
+    { x: 44 * TILE_SIZE, y: 17 * TILE_SIZE }, // direita
+    { x:  5 * TILE_SIZE, y: 26 * TILE_SIZE }, // subsolo, sobre o chão do subsolo
 ]
 
 export const COIN_POSITIONS = [
     // Área inicial
     { col: 4,  row: 16 }, { col: 5,  row: 16 },
-    // Plataformas médias
+    // Plataformas médias — 1 tile acima da plataforma (row 7 → moedas em row 6)
     { col: 10, row: 6  }, { col: 11, row: 6  }, { col: 12, row: 6  },
     { col: 38, row: 6  }, { col: 39, row: 6  },
-    // Topo da torre
+    // Topo da torre (row 14 → moedas em row 13)
     { col: 21, row: 13 }, { col: 22, row: 13 }, { col: 23, row: 13 },
     { col: 24, row: 13 }, { col: 25, row: 13 }, { col: 26, row: 13 },
-    // Plataforma secreta
+    // Plataforma secreta (row 3 → moedas em row 2)
     { col: 22, row: 2  }, { col: 23, row: 2  }, { col: 24, row: 2  },
-    // Subsolo
-    { col: 3,  row: 25 }, { col: 15, row: 25 }, { col: 16, row: 25 },
-    { col: 31, row: 25 }, { col: 42, row: 25 }, { col: 43, row: 25 },
+    // Subsolo — 1 tile acima das plataformas (row 24 → moedas em row 23)
+    { col: 3,  row: 23 }, { col: 15, row: 23 }, { col: 16, row: 23 },
+    { col: 31, row: 23 }, { col: 42, row: 23 }, { col: 43, row: 23 },
 ]
 
 export const ENEMY_POSITIONS = [
     // Área inicial
     { col: 6,  row: 16, left: 4*32,  right: 7*32,  speed: 80  },
-    // Plataforma média esquerda
+    // Plataforma média esquerda — spawn sobre a plataforma
     { col: 11, row: 6,  left: 10*32, right: 13*32, speed: 90  },
     // Área central
     { col: 22, row: 16, left: 18*32, right: 27*32, speed: 100 },
     { col: 30, row: 16, left: 28*32, right: 35*32, speed: 100 },
     // Área direita
     { col: 43, row: 16, left: 40*32, right: 48*32, speed: 110 },
-    // Subsolo — mais rápidos
-    { col: 8,  row: 25, left: 1*32,  right: 11*32, speed: 120 },
-    { col: 20, row: 25, left: 13*32, right: 27*32, speed: 120 },
-    { col: 38, row: 25, left: 31*32, right: 48*32, speed: 130 },
+    // Subsolo — spawn sobre as plataformas (row 24 → spawn em row 23)
+    { col: 3,  row: 23, left: 1*32,  right: 11*32, speed: 120 },
+    { col: 15, row: 23, left: 13*32, right: 27*32, speed: 120 },
+    { col: 31, row: 23, left: 31*32, right: 48*32, speed: 130 },
 ]

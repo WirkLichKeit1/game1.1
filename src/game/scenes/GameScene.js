@@ -108,8 +108,8 @@ export class GameScene extends Phaser.Scene {
     _buildParallax(mapW) {
         const layers = [
             { key: 'bg-sky',       scrollX: 0,    scrollY: 0    },
-            { key: 'bg-mountains', scrollX: 0.15, scrollY: 0.05 },
-            { key: 'bg-trees',     scrollX: 0.35, scrollY: 0.1  },
+            { key: 'bg-mountains', scrollX: 0.15, scrollY: 0 },
+            { key: 'bg-trees',     scrollX: 0.35, scrollY: 0 },
         ]
         for (const { key, scrollX, scrollY } of layers) {
             const img = this.add.tileSprite(0, 0, mapW, 560, key)
@@ -273,7 +273,7 @@ export class GameScene extends Phaser.Scene {
             if (!cp.activated && cp.checkTrigger(this.player)) {
                 cp.activate()
                 this._spawnX = cp.x
-                this._spawnY = cp.y - 20
+                this._spawnY = cp.y - 60
             }
         }
 
