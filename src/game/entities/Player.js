@@ -30,6 +30,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this._onWall        = false   // está encostado numa parede?
         this._wallDir       = 0      // -1 = parede à esquerda, 1 = parede à direita
         this._wallSlideTimer = 0     // tempo deslizando (para partículas)
+        this._wallJumpTimer = 0
         this.WALL_SLIDE_SPEED = 80   // velocidade de queda ao deslizar na parede
 
         this._createAnims(scene)
@@ -142,6 +143,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.facing = dir
             this.setFlipX(dir < 0)
             this.jumpCount = 1   // consome um salto mas não zera (permite double jump após)
+            this._wallJumpTimer = 0.18 // lockput de input horizontal
+            this._onWall = false // sai da parede imediatamente
             this._spawnJumpDust()
         }
         // ── Pulo normal ───────────────────────────────────────────────────────
@@ -154,7 +157,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // ── Movimento horizontal ──────────────────────────────────────────────
         // Durante wall jump dá um curto período sem controle total
         // (o impulso horizontal do wall jump prevalece brevemente)
-        if (!this._onWall) {
+        if (this._wallJumpTimer > 0) {
+            this._wallJumpTimer -= dt
+            // Durante lockout: não aceita input, deixa o impulso do wall jump agir
+        } else if (!this._onWall) {
             if (left) {
                 this.setVelocityX(-280)
                 this.facing = -1

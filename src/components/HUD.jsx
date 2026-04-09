@@ -83,8 +83,10 @@ export function HUD({ score, coins }) {
                     <DPadBtn label="◀" onDown={() => window._dpad?.press('left')} onUp={() => window._dpad?.release('left')} />
                     <DPadBtn label="▶" onDown={() => window._dpad?.press('right')} onUp={() => window._dpad?.release('right')} />
                 </div>
-                <DPadBtn label="⚡" onDown={() => window._dpad?.press('dash')} onUp={() => window._dpad?.release('dash')} />
-                <DPadBtn label="▲" onDown={() => window._dpad?.press('jump')} onUp={() => window._dpad?.release('jump')} />
+                <div style={{ display: 'flex', gap: 8, pointerEvents: 'all'}}>
+                    <DPadBtn label="⚡" onDown={() => window._dpad?.press('dash')} onUp={() => window._dpad?.release('dash')} />
+                    <DPadBtn label="▲" onDown={() => window._dpad?.press('jump')} onUp={() => window._dpad?.release('jump')} />
+                </div>
             </div>
         </div>
     )
