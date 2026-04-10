@@ -273,7 +273,7 @@ export class GameScene extends Phaser.Scene {
             if (!cp.activated && cp.checkTrigger(this.player)) {
                 cp.activate()
                 this._spawnX = cp.x
-                this._spawnY = cp.y - 60
+                this._spawnY = cp.y
             }
         }
 

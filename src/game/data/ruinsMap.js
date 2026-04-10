@@ -57,9 +57,9 @@ export const MAP = [
 export const PLAYER_START = { x: 3 * TILE_SIZE, y: 15 * TILE_SIZE }
 
 export const CHECKPOINTS = [
-    { x: 24 * TILE_SIZE, y: 17 * TILE_SIZE }, // centro, sobre o chão principal
-    { x: 44 * TILE_SIZE, y: 17 * TILE_SIZE }, // direita
-    { x:  5 * TILE_SIZE, y: 26 * TILE_SIZE }, // subsolo, sobre o chão do subsolo
+    { x: 24 * TILE_SIZE, y: 16 * TILE_SIZE }, // centro, sobre o chão principal
+    { x: 44 * TILE_SIZE, y: 16 * TILE_SIZE }, // direita
+    { x:  5 * TILE_SIZE, y: 25 * TILE_SIZE }, // subsolo, sobre o chão do subsolo
 ]
 
 export const COIN_POSITIONS = [
