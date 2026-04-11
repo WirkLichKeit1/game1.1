@@ -12,8 +12,8 @@ export function PhaserGame({ onScoreChange, onCoinsChange, onHpChange, onHeartsC
 
         const config = {
             type: Phaser.AUTO,          // usa WebGL se disponível, senão Canvas
-            width: 800,
-            height: 560,
+            width: 1000,
+            height: 860,
             parent: containerRef.current,
             backgroundColor: '#0d1b2a',
             physics: {
