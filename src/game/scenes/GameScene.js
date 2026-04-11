@@ -99,6 +99,8 @@ export class GameScene extends Phaser.Scene {
 
         this.events.on('player-died', this._onPlayerDied, this)
         this._emitHUD()
+        this.registry.set('hp',     100)
+        this.registry.set('hearts', 5)
 
         this._deathY = mapH + 100
     }
@@ -217,7 +219,8 @@ export class GameScene extends Phaser.Scene {
             this._emitHUD()
             this.cameras.main.shake(80, 0.006)
         } else {
-            player.die()
+            player.takeDamage(25)
+            this.cameras.main.shake(150, 0.012)
         }
     }
 
@@ -233,9 +236,9 @@ export class GameScene extends Phaser.Scene {
             this.isDead = false
             this.player.setPosition(this._spawnX, this._spawnY)
             this.player.setVelocity(0, 0)
-            this.player.isAlive  = true
-            this.player.alpha    = 1
-            this.player.clearTint()
+            this.player.isAlive     = true
+            this.player.alpha       = 1
+            this.player._invincible = 0
             this.cameras.main.fadeIn(400)
         })
     }
@@ -279,7 +282,7 @@ export class GameScene extends Phaser.Scene {
 
         // Morte por queda
         if (this.player.y > this._deathY) {
-            this.player.die()
+            this.player.loseHeart()
         }
     }
 }

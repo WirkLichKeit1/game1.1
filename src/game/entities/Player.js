@@ -17,6 +17,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this._lastOnGround = false
         this.dustEmitter   = null
 
+        // HP e corações
+        this.maxHearts   = 5
+        this.hearts      = 5
+        this.hp          = 100      // 0-100, zerar = perde 1 coração
+        this._invincible = 0        // segundos de invencibilidade após dano
+        this._flashTimer = 0        // controla o piscar
+
         // Dash
         this._dashCooldown = 0
         this._dashDuration = 0
@@ -27,43 +34,96 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this._ghostTimer   = 0
 
         // Wall Jump
-        this._onWall        = false   // está encostado numa parede?
-        this._wallDir       = 0      // -1 = parede à esquerda, 1 = parede à direita
-        this._wallSlideTimer = 0     // tempo deslizando (para partículas)
-        this._wallJumpTimer = 0
-        this.WALL_SLIDE_SPEED = 80   // velocidade de queda ao deslizar na parede
+        this._onWall         = false
+        this._wallDir        = 0
+        this._wallSlideTimer = 0
+        this._wallJumpTimer  = 0
+        this.WALL_SLIDE_SPEED = 80
 
         this._createAnims(scene)
     }
 
     _createAnims(scene) {
         const anims = scene.anims
-
         if (!anims.exists('player-idle')) {
             anims.create({
                 key: 'player-idle',
                 frames: anims.generateFrameNumbers('player', { start: 0, end: 0 }),
-                frameRate: 4,
-                repeat: -1
+                frameRate: 4, repeat: -1
             })
         }
         if (!anims.exists('player-run')) {
             anims.create({
                 key: 'player-run',
                 frames: anims.generateFrameNumbers('player', { start: 1, end: 2 }),
-                frameRate: 10,
-                repeat: -1
+                frameRate: 10, repeat: -1
             })
         }
         if (!anims.exists('player-jump')) {
             anims.create({
                 key: 'player-jump',
                 frames: anims.generateFrameNumbers('player', { start: 3, end: 3 }),
-                frameRate: 1,
-                repeat: -1
+                frameRate: 1, repeat: -1
             })
         }
     }
+
+    // ── Dano ──────────────────────────────────────────────────────────────────
+
+    takeDamage(amount) {
+        // Invencível: ignora dano
+        if (this._invincible > 0 || !this.isAlive) return
+
+        this._invincible = 1.5
+        this.hp = Math.max(0, this.hp - amount)
+
+        // Emite atualização do HUD
+        this.scene.registry.set('hp',     this.hp)
+        this.scene.registry.set('hearts', this.hearts)
+
+        if (this.hp <= 0) {
+            // HP zerou — perde um coração e restaura HP
+            this.hearts--
+            this.hp = 100
+
+            this.scene.registry.set('hp',     this.hp)
+            this.scene.registry.set('hearts', this.hearts)
+
+            if (this.hearts <= 0) {
+                // Sem corações — game over, vai pro checkpoint
+                this.hearts  = this.maxHearts
+                this.hp      = 100
+                this.scene.registry.set('hp',     this.hp)
+                this.scene.registry.set('hearts', this.hearts)
+                this._triggerDeath()
+            }
+        }
+    }
+
+    // Chamado ao cair no vazio — perde coração direto
+    loseHeart() {
+        if (!this.isAlive) return
+        this.hearts = Math.max(0, this.hearts - 1)
+        this.hp     = 100
+
+        this.scene.registry.set('hp',     this.hp)
+        this.scene.registry.set('hearts', this.hearts)
+
+        if (this.hearts <= 0) {
+            this.hearts = this.maxHearts
+            this.scene.registry.set('hearts', this.hearts)
+        }
+
+        this._triggerDeath()
+    }
+
+    _triggerDeath() {
+        if (!this.isAlive) return
+        this.isAlive = false
+        this.scene.events.emit('player-died')
+    }
+
+    // ── Update ────────────────────────────────────────────────────────────────
 
     update(delta, cursors, wasd, dashKey) {
         if (!this.isAlive) return
@@ -80,27 +140,32 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                              || Phaser.Input.Keyboard.JustDown(cursors.space)
         const dashP = Phaser.Input.Keyboard.JustDown(dashKey)
 
-        // Reset jump ao tocar o chão
         if (onGround) this.jumpCount = 0
 
-        // Detecta se está numa parede (só no ar, só se estiver segurando direção)
+        // ── Invencibilidade (piscar) ───────────────────────────────────────────
+        if (this._invincible > 0) {
+            this._invincible -= dt
+            this._flashTimer += dt
+            // Alterna visibilidade a cada 0.1s
+            this.setAlpha(Math.floor(this._flashTimer / 0.1) % 2 === 0 ? 1 : 0.2)
+        } else {
+            this.setAlpha(1)
+            this._flashTimer = 0
+        }
+
+        // ── Detecção de parede ────────────────────────────────────────────────
         this._onWall = false
         this._wallDir = 0
         if (!onGround && !this._isDashing) {
-            if (onLeft && left) {
-                this._onWall = true
-                this._wallDir = -1
-            } else if (onRight && right) {
-                this._onWall = true
-                this._wallDir = 1
-            }
+            if (onLeft && left)       { this._onWall = true; this._wallDir = -1 }
+            else if (onRight && right) { this._onWall = true; this._wallDir =  1 }
         }
 
-        // Timers
+        // ── Timers de dash ────────────────────────────────────────────────────
         if (this._dashCooldown > 0) this._dashCooldown -= dt
         if (this._dashDuration > 0) {
             this._dashDuration -= dt
-            this._ghostTimer -= dt
+            this._ghostTimer   -= dt
             if (this._ghostTimer <= 0) {
                 this._spawnGhost()
                 this._ghostTimer = 0.04
@@ -110,7 +175,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.body.setGravityY(0)
         }
 
-        // Durante o dash ignora tudo mais
         if (this._isDashing) {
             this._updateAnim(onGround)
             this._lastOnGround = onGround
@@ -119,12 +183,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
         // ── Wall slide ────────────────────────────────────────────────────────
         if (this._onWall && this.body.velocity.y > 0) {
-            // Limita velocidade de queda ao deslizar
             if (this.body.velocity.y > this.WALL_SLIDE_SPEED) {
                 this.body.setVelocityY(this.WALL_SLIDE_SPEED)
             }
-
-            // Partículas de fricção periódicas
             this._wallSlideTimer -= dt
             if (this._wallSlideTimer <= 0) {
                 this._spawnWallDust()
@@ -136,30 +197,26 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
         // ── Wall jump ─────────────────────────────────────────────────────────
         if (jumpP && this._onWall) {
-            // Salta na direção oposta à parede
             const dir = -this._wallDir
             this.setVelocityX(dir * 320)
             this.setVelocityY(-780)
             this.facing = dir
             this.setFlipX(dir < 0)
-            this.jumpCount = 1   // consome um salto mas não zera (permite double jump após)
-            this._wallJumpTimer = 0.18 // lockput de input horizontal
-            this._onWall = false // sai da parede imediatamente
+            this.jumpCount      = 1
+            this._wallJumpTimer = 0.18
+            this._onWall        = false
             this._spawnJumpDust()
         }
         // ── Pulo normal ───────────────────────────────────────────────────────
         else if (jumpP && this.jumpCount < this.maxJumps) {
-            this.setVelocityY(-820)
+            this.setVelocityY(-620)
             this.jumpCount++
             this._spawnJumpDust()
         }
 
         // ── Movimento horizontal ──────────────────────────────────────────────
-        // Durante wall jump dá um curto período sem controle total
-        // (o impulso horizontal do wall jump prevalece brevemente)
         if (this._wallJumpTimer > 0) {
             this._wallJumpTimer -= dt
-            // Durante lockout: não aceita input, deixa o impulso do wall jump agir
         } else if (!this._onWall) {
             if (left) {
                 this.setVelocityX(-280)
@@ -183,16 +240,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this._lastOnGround = onGround
     }
 
+    // ── Dash ──────────────────────────────────────────────────────────────────
+
     _startDash() {
         this._isDashing    = true
         this._dashDuration = this.DASH_DURATION
         this._dashCooldown = this.DASH_COOLDOWN
         this._ghostTimer   = 0
-
         this.body.setGravityY(-900)
         this.setVelocityY(0)
         this.setVelocityX(this.facing * this.DASH_SPEED)
-
         if (this.dustEmitter) {
             this.dustEmitter.setPosition(this.x, this.y)
             this.dustEmitter.explode(8)
@@ -207,20 +264,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         ghost.setDepth(9)
         ghost.setScale(this.scaleX, this.scaleY)
         this.scene.tweens.add({
-            targets: ghost,
-            alpha: 0,
-            duration: 180,
+            targets: ghost, alpha: 0, duration: 180,
             onComplete: () => ghost.destroy()
         })
     }
 
-    _spawnWallDust() {
-        if (!this.dustEmitter) return
-        // Partículas saem da parede em direção oposta
-        const offsetX = this._wallDir * 14
-        this.dustEmitter.setPosition(this.x + offsetX, this.y)
-        this.dustEmitter.explode(3)
-    }
+    // ── Animação ──────────────────────────────────────────────────────────────
 
     _updateAnim(onGround) {
         if (this._isDashing) {
@@ -228,34 +277,30 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.setScale(1.2, 0.85)
             return
         }
-
-        // Wall slide — achata levemente contra a parede
         if (this._onWall) {
             this.play('player-jump', true)
             this.setScale(this._wallDir > 0 ? 0.8 : 1.0, 1.1)
             return
         }
-
         if (!onGround) {
             this.play('player-jump', true)
             this.setScale(0.92, 1.08)
         } else if (Math.abs(this.body.velocity.x) > 10) {
             this.play('player-run', true)
-            const sx = this.scaleX
-            const sy = this.scaleY
+            const sx = this.scaleX, sy = this.scaleY
             this.setScale(sx + (1 - sx) * 0.25, sy + (1 - sy) * 0.25)
         } else {
             this.play('player-idle', true)
-            const sx = this.scaleX
-            const sy = this.scaleY
+            const sx = this.scaleX, sy = this.scaleY
             this.setScale(sx + (1 - sx) * 0.25, sy + (1 - sy) * 0.25)
         }
-
         if (onGround && !this._lastOnGround) {
             this.setScale(1.1, 0.9)
             this._spawnLandDust()
         }
     }
+
+    // ── Partículas ────────────────────────────────────────────────────────────
 
     _spawnJumpDust() {
         if (!this.dustEmitter) return
@@ -269,17 +314,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.dustEmitter.explode(10)
     }
 
-    die() {
-        if (!this.isAlive) return
-        this.isAlive = false
-        this.setTint(0xff4444)
-        this.scene.tweens.add({
-            targets: this,
-            y: this.y - 60,
-            alpha: 0,
-            duration: 600,
-            ease: 'Power2',
-            onComplete: () => this.scene.events.emit('player-died')
-        })
+    _spawnWallDust() {
+        if (!this.dustEmitter) return
+        this.dustEmitter.setPosition(this.x + this._wallDir * 14, this.y)
+        this.dustEmitter.explode(3)
     }
 }
